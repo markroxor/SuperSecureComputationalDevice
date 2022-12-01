@@ -11,4 +11,5 @@ So each player will have its own sum of the shares of the shares of all the play
 `elgamal.py` is the library used for generating elgamal keys.
 
 `counter.py` - copy this file in your `counter` folder in the pyteal-course folder.
-this file 
+
+[refer script.sh for comment on its working]
