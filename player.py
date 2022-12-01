@@ -1,53 +1,35 @@
-
-# import socket
-
-
-# with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#     s.bind((HOST, PORT))
-#     s.listen()
-#     conn, addr = s.accept()
-#     with conn:
-#         print(f"Connected by {addr}")
-#         while True:
-#             data = conn.recv(1024)
-#             if not data:
-#                 break
-#             print(data , 'data')
-#             # conn.sendall(data)
-
-# import sys
-# sys.exit(0)
-
-# first of all import the socket library
 import socket            
 import sys, json
 from random import randint
-from elgamal import PrivateKey, PublicKey, generate_keys, encrypt, decrypt
+import threading
+from time import sleep
+
+# if the player crashes, everything will timeout in 100 secs and no communication will take place
+# none of the parties will send ANYTHING to smart contract(SC) until they have ALL the
+# required values
+socket.setdefaulttimeout(100)
 
 player = sys.argv[1]
 
+HOST = "127.0.0.1"
+PORT = 8080
 
-HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
-PORT = 8080   # Port to listen on (non-privileged ports are > 1023)
-
-
-print("i have access to partial key in file ", 'privateKey'+str(player)+'.key')
+print("I have access to my share of the secret key in file ", 'privateKey'+str(player)+'.key')
 with open('privateKey'+str(player)+'.key') as f:
     privateKey = json.load(f)
-
 
 x = privateKey['x']
 
 print('my secret is', x)
+
+# using SUM protocol II
+# TODO use gadgets here to do whatever
 x0 = randint(1, x)
 x1 = randint(1, x)
 x2 = x - x1 - x0
 xs = [x0, x1, x2]
-
-socket.setdefaulttimeout(100)
     
-
-def receive_and_print():
+def receive_and_send_to_smart_contract():
     expecting_players = []
     keys = [xs[-1]]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -56,6 +38,7 @@ def receive_and_print():
         s.bind((HOST, PORT+ int(player)))
         s.listen()
 
+        # keep waiting until it gets input of the other two players.
         while not (len(expecting_players) >= 2 and (int(player) + 1)%3 in expecting_players and (int(player) + 2)%3 in expecting_players):
             conn, addr = s.accept()
             with conn:
@@ -72,68 +55,31 @@ def receive_and_print():
                         break
     
     print('keys are ', keys)
+    # TODO send to smart contract the local computation, here
     print('sum', sum([ int(k) for k in keys]))
 
-
-import threading
-background_thread = threading.Thread(target=receive_and_print)
+background_thread = threading.Thread(target=receive_and_send_to_smart_contract)
 background_thread.daemon = True
 background_thread.start()
 
-import socket
-from time import sleep
-
+# iterate over each player's server and send them their share
+# of the share that I have.
 for i in range(2):
     other_player = (int(player) + i + 1)%3
-    # print('other player is ', other_player)
     while 1:
         sleep(1)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
+                # if the other player's server is up, send their share to them.
                 s.connect((HOST, PORT+other_player))
             except:
+                # if the other player's server is still not up yet, wait for it.
                 continue
 
-            print('sending to ', other_player)
+            print('sending to ', other_player, xs[i])
             s.sendall((str(player)+" I am "+str(player) + " sending data to " + str(other_player ) + " data is -> " + str(xs[i])).encode('utf-8'))
-            # data = s.recv(1024)
-        # print('breaki9ng')
+
         break
+
+# wait for background process to finish
 background_thread.join()
-# print(f"Received {data!r}")
-
-sys.exit(0)
-while True: 
-    try:
-        c, addr = s.accept()    
-    except socket.timeout:
-        print('timeout')
-    
-    with conn:
-        print(f"Connected by {addr}")
-        while True:
-            data = conn.recv(1024)
-            if not data:
-                break
-            conn.sendall(data)
-
-    print ('Got connection from', addr )
-
-    c.send('Thank you for connecting'.encode())
-
-    c.close()
-   
-#   break
-
-
-import socket
-
-HOST = "127.0.0.1"  # The server's hostname or IP address
-PORT = 8080  # The port used by the server
-
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.connect((HOST, PORT))
-    s.sendall(b"Hello, world")
-    data = s.recv(1024)
-
-print(f"Received {data!r}")
