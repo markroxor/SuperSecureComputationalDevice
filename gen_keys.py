@@ -28,7 +28,23 @@ for i in range(3):
         db = {'p': privateKey.p, 'g':privateKey.g, 'x':xis[i]}
         json.dump(db, f)
 
+mis = ["5", "10", "15"]
+cis = [(encrypt(publicKey, mis[0])), (encrypt(publicKey, mis[1])), (encrypt(publicKey, mis[2]))]
 
+#for i in range(3):
+#    print(mis[i], "->", cis[i], "->", (decrypt(privateKey, cis[i])))
+
+# for i in range(3):
+#     with open('message'+str(i)+'.m', 'w') as f:
+#         db = {'m':int(mis[i])}
+#         json.dump(db, f)
+
+for i in range(3):
+    with open('cipher'+str(i)+'.c', 'w') as f:
+        db = {'c':int(cis[i])}
+        json.dump(db, f)
+        
+        
 #################################################################################################################################################################################################################################
 
 publicKey = None

@@ -15,6 +15,7 @@ HOST = "127.0.0.1"
 PORT = 8080
 
 print("I have access to my share of the secret key in file ", 'privateKey'+str(player)+'.key')
+# key part
 with open('privateKey'+str(player)+'.key') as f:
     privateKey = json.load(f)
 
@@ -28,6 +29,46 @@ x0 = randint(1, x)
 x1 = randint(1, x)
 x2 = x - x1 - x0
 xs = [x0, x1, x2]
+
+# # message part
+# with open('message'+str(player)+'.m') as f:
+#     message = json.load(f)
+
+# m = message['m']
+
+# print('my message is', m)
+
+# # split into shares
+# m0 = randint(1, int(m))
+# m1 = randint(1, int(m))
+# m2 = int(m) - m1 - m0
+# ms = [m0, m1, m2]
+
+# # print shares for sanity
+# for i in range(3):
+#     print(ms[i])
+
+# cipher part
+with open('cipher'+str(player)+'.c') as f:
+    message = json.load(f)
+
+c = message['c']
+
+print('my cipher is', c)
+
+# split into shares
+c0 = randint(1, c)
+c1 = randint(1, c)
+c2 = c - c1 - c0
+cs = [c0, c1, c2]
+
+# print shares for sanity
+for i in range(3):
+    print(cs[i])
+
+# using SUM protocol II
+# TODO use gadgets here to do whatever
+
     
 def receive_and_send_to_smart_contract():
     expecting_players = []
