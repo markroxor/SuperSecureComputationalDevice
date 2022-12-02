@@ -45,7 +45,7 @@ c = message['c']
 # using SUM protocol II
 # TODO use gadgets here to do whatever
 
-global x1,y2,x2,k1,k2,R1,R2,y1,data_r
+global x1,y2,x2,k1,k2,R1,R2,y1,data_r,finalShare0,finalShare2
 
 k1 = None
 k2 = None
@@ -53,7 +53,7 @@ R1 = None
 R2 = None
 
 def receive(method):
-    global x1,y2,x2,k1,k2,R1,R2,y1,data_r
+    global x1,y2,x2,k1,k2,R1,R2,y1,data_r,finalShare0,finalShare2
     expecting_players = []
     data_r = [x]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -89,6 +89,20 @@ def receive(method):
                         if player == '1':
                             x2 = int(data.split()[-1])
                             # print('RECV: x2', x2)
+                        break
+                            
+                    if method == b'final':
+                        if player == '0':
+                            finalShare0 = int(data.split()[-1])
+                            # print("in 0")
+                            # print(finalShare0)
+                            # print('RECV: y1', y1)
+                        if player == '2':
+                            finalShare2 = int(data.split()[-1])
+                            # print(finalShare0)
+                            # print("in 2")
+                            # print('RECV: x2', x2) 
+                        break
 
                     if method == b'get_k':
                         if player == '0':
@@ -97,6 +111,7 @@ def receive(method):
                         if player == '1':
                             k1 = int(data.split()[-1])
                             # print('RECV: k1', k1)
+                        break
 
                     if method == b'get_r':
                         if player == '0':
@@ -106,7 +121,9 @@ def receive(method):
                         if player == '1':
                             R1 = data.split()[-1]
                             # print('RECV: R1', R1)
-                    break
+                        break
+                    
+                    # break
 
 
             if method != b'pk' or len(expecting_players) >= 2:
@@ -156,11 +173,10 @@ for i in range(2):
     
 thread.join()
     
-print('sum', sum([ int(k) for k in data_r]))
-print(c)
-mi = decrypt(PrivateKey(myPrivateKeyShare['p'], myPrivateKeyShare['g'], (sum([ int(k) for k in data_r])), 256), c)    
-print(mi)
-mi = int(mi)
+# print('sum', sum([ int(k) for k in data_r]))
+# print(c)
+smi = int(decrypt(PrivateKey(myPrivateKeyShare['p'], myPrivateKeyShare['g'], (sum([ int(k) for k in data_r])), 256), c)) 
+mi = smi
 # pk_background_thread.join()
 
 
@@ -190,6 +206,7 @@ if player == '1':
 prod = 0
 for i in range(NUM_BITS):
     for j in range(NUM_BITS):
+        # print('init', i, j)
         if player == '0':
             # s1s[i] 
             # print('here p0')
@@ -211,7 +228,7 @@ for i in range(NUM_BITS):
             send(x2, 1, 'get_xy_share')
             thread.join()
             y1 = y1
-            # print('y1', y1)
+            # print(i,j, 'y1', y1)
             # send(x, 1)
 
             xs = []
@@ -305,9 +322,49 @@ for i in range(NUM_BITS):
 
             prod += xy*2**(i+j)
 
-print(prod)
+# print(prod)
+
+sleep(10)
 
 
+prod0 = 0
+prod2 = 0
+final0 = 0
+final2 = 0
+# share its values to other players
+if player == '0':
+    #shares of the product
+    prod0 = randint(1, prod)
+    prod2 = prod - prod0
+    thread = threading.Thread(target=receive, args=('final',))
+    thread.daemon = True
+    thread.start()
+    # for i in range(2):
+    #     i+=1
+    #     send(x, (int(player) + i)%3, 'pk')
+    send(prod2, 2, 'final')
+    thread.join()
+    finalShare0 = finalShare0
+    print(finalShare0 + prod0)
+    final0 = finalShare0 + prod0
 
+
+s0 = 0
+s2 = 0
+if player == '2':
+    #shares of the product
+    s0 = randint(1, mi)
+    s2 = mi - s0
+    thread = threading.Thread(target=receive, args=('final',))
+    thread.daemon = True
+    thread.start()
+    # for i in range(2):
+    #     i+=1
+    #     send(x, (int(player) + i)%3, 'pk')
+    send(s0, 0, 'final')
+    thread.join()
+    finalShare2 = finalShare2
+    print(finalShare2 + s2)
+    final2 = finalShare2 + s2
 
 

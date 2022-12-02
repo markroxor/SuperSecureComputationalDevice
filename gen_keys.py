@@ -28,7 +28,7 @@ for i in range(3):
         db = {'p': privateKey.p, 'g':privateKey.g, 'x':xis[i]}
         json.dump(db, f)
 
-mis = ["5", "10", "15"]
+mis = ["4", "6", "13"]
 cis = [(encrypt(publicKey, mis[0])), (encrypt(publicKey, mis[1])), (encrypt(publicKey, mis[2]))]
 
 #for i in range(3):
