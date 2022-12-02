@@ -57,14 +57,14 @@ c = message['c']
 # print('my cipher is', c)
 
 # split into shares
-c0 = randint(1, c)
-c1 = randint(1, c)
-c2 = c - c1 - c0
-cs = [c0, c1, c2]
+# c0 = randint(1, c)
+# c1 = randint(1, c)
+# c2 = c - c1 - c0
+# cs = [c0, c1, c2]
 
-# print shares for sanity
-for i in range(3):
-    print(cs[i])
+# # print shares for sanity
+# for i in range(3):
+#     print(cs[i])
 
 # using SUM protocol II
 # TODO use gadgets here to do whatever
@@ -179,7 +179,7 @@ def send(msg, other_player, method):
 print("$"*80)
 
 
-ms = [7, 3]
+ms = [4, 3]
 NUM_BITS = 3
 s1s = []
 i = 0
