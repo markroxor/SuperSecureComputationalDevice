@@ -19,7 +19,7 @@ with open('privateKey.key', 'w') as f:
 x = privateKey.x
 x0 = randint(1, x)%publicKey.p
 x1 = randint(1, x)%publicKey.p
-x2 = x - x1 - x0%publicKey.p
+x2 = (x - x1 - x0)%publicKey.p
 
 xis = [x1, x2, x0]
 
@@ -41,7 +41,7 @@ cis = [(encrypt(publicKey, mis[0])), (encrypt(publicKey, mis[1])), (encrypt(publ
 
 for i in range(3):
     with open('cipher'+str(i)+'.c', 'w') as f:
-        db = {'c':int(cis[i])}
+        db = {'c':int(''.join(cis[i].split()))}
         json.dump(db, f)
         
         
@@ -66,7 +66,11 @@ for i in range(3):
 privateKey = PrivateKey(privateKey['p'], privateKey['g'], x, 256)
 
 cipher = encrypt(publicKey, "This is the message I want to encrypt")
+# cipher = int(''.join(cipher.split()))
+
 print('this is ciphertext -> ', cipher)
+
+# cipher
 plaintext = decrypt(privateKey, cipher)
 print('\n\nthis is plaintext -> ', plaintext)
 

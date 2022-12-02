@@ -25,10 +25,10 @@ print('my secret is', x)
 
 # using SUM protocol II
 # TODO use gadgets here to do whatever
-x0 = randint(1, x)
-x1 = randint(1, x)
-x2 = x - x1 - x0
-xs = [x0, x1, x2]
+x0 = randint(1, x)%privateKey['p']
+x1_ = randint(1, x)%privateKey['p']
+x2_ = (x - x1_ - x0)%privateKey['p']
+xs = [x0, x1_, x2_]
 
 # # message part
 # with open('message'+str(player)+'.m') as f:
@@ -54,7 +54,7 @@ with open('cipher'+str(player)+'.c') as f:
 
 c = message['c']
 
-print('my cipher is', c)
+# print('my cipher is', c)
 
 # split into shares
 c0 = randint(1, c)
@@ -69,46 +69,89 @@ for i in range(3):
 # using SUM protocol II
 # TODO use gadgets here to do whatever
 
-    
-def receive_and_send_to_smart_contract():
+global x1,y2,x2,k1,k2,R1,R2,y1
+
+k1 = None
+k2 = None
+R1 = None
+R2 = None
+
+def receive(method):
+    global x1,y2,x2,k1,k2,R1,R2,y1
     expecting_players = []
-    keys = [xs[-1]]
+    data_r = [x]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
+        # print('reception server running at ', (HOST, PORT+ int(player)), method)
         s.bind((HOST, PORT+ int(player)))
         s.listen()
 
         # keep waiting until it gets input of the other two players.
         while not (len(expecting_players) >= 2 and (int(player) + 1)%3 in expecting_players and (int(player) + 2)%3 in expecting_players):
             conn, addr = s.accept()
+            # print("got conn")
             with conn:
                 while True:
+                    sleep(1)
+                    # print('waiting to recieve at', (HOST, PORT+ int(player)), method)
                     data = conn.recv(1024)
                     if not data:
-                        break
+                        continue
                     other_player = int(data.split()[0])
+                    method = data.split()[1]
+                    # print('got method', method)
 
-                    if other_player not in expecting_players:
-                        print(" got -> ", data)
-                        keys.append(data.split()[-1])
+                    if method == b'pk' and other_player not in expecting_players:
+                        # print(" got -> ", data)
+                        data_r.append(data.split()[-1])
                         expecting_players.append(other_player)
-                        break
-    
-    print('keys are ', keys)
-    # TODO send to smart contract the local computation, here
-    print('sum', sum([ int(k) for k in keys]))
 
-background_thread = threading.Thread(target=receive_and_send_to_smart_contract)
-background_thread.daemon = True
-background_thread.start()
+                    if method == b'get_xy_share':
+                        if player == '0':
+                            y1 = int(data.split()[-1])
+                            print('RECV: y1', y1)
+                        if player == '1':
+                            x2 = int(data.split()[-1])
+                            print('RECV: x2', x2)
+
+                    if method == b'get_k':
+                        if player == '0':
+                            k2 = int(data.split()[-1])
+                            print('RECV: k2', k2)
+                        if player == '1':
+                            k1 = int(data.split()[-1])
+                            print('RECV: k1', k1)
+
+                    if method == b'get_r':
+                        if player == '0':
+                            R2 = data.split()[-1]
+                            print('RECV: R2', R2)
+                            # print('set R2')
+                        if player == '1':
+                            R1 = data.split()[-1]
+                            print('RECV: R1', R1)
+                    break
+
+
+            if method != b'pk':
+                break
+    
+    # print('data received is ', method, data_r)
+    # TODO send to smart contract the local computation, here
+    # print('sum', method, sum([ int(k) for k in data_r]))
+
+# pk_background_thread = threading.Thread(target=receive, args=('pk',))
+# pk_background_thread.daemon = True
+# pk_background_thread.start()
 
 # iterate over each player's server and send them their share
 # of the share that I have.
-for i in range(2):
-    other_player = (int(player) + i + 1)%3
+
+def send(msg, other_player, method):
+    # other_player = (int(player) + other_player)%3
     while 1:
         sleep(1)
+        # print('SEND: waiting for ', (HOST, PORT+other_player), method)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
                 # if the other player's server is up, send their share to them.
@@ -117,10 +160,135 @@ for i in range(2):
                 # if the other player's server is still not up yet, wait for it.
                 continue
 
-            print('sending to ', other_player, xs[i])
-            s.sendall((str(player)+" I am "+str(player) + " sending data to " + str(other_player ) + " data is -> " + str(xs[i])).encode('utf-8'))
+            # print('SEND: sending to ', other_player, ' the msg -> ', msg)
+            to_s = str(player)+" "+method+" " + str(msg)
+            print("SEND:", method, msg)
+            s.sendall((to_s).encode('utf-8'))
+            # print("SENT:", to_s)
 
         break
 
+# for i in range(2):
+#     i+=1
+#     send(x, (int(player) + i)%3, 'pk')
+
 # wait for background process to finish
-background_thread.join()
+# pk_background_thread.join()
+
+
+print("$"*80)
+
+
+ms = [0, 0]
+
+# 1-4-OT
+if player == '0':
+    print('here p0')
+    with open("0s_pre_sharedbits.json") as f:
+        precomps = json.load(f)
+    
+    print(precomps)
+    c = precomps['c']
+    bc = precomps['bc']
+
+    x = ms[0]%2
+    x1 = randint(0, 1)
+    x2 = (x - x1)%2
+    print('x', x,'x1', x1, 'x2', x2)
+
+    thread = threading.Thread(target=receive, args=('get_xy_share',))
+    thread.daemon = True
+    thread.start()
+    send(x2, 1, 'get_xy_share')
+    thread.join()
+    y1 = y1
+    # print('y1', y1)
+    # send(x, 1)
+
+    xs = []
+    xs.append(((x1+0)%2)*((y1+0)%2))
+    xs.append(((x1+0)%2)*((y1+1)%2))
+    xs.append(((x1+1)%2)*((y1+0)%2))
+    xs.append(((x1+1)%2)*((y1+1)%2))
+
+    c_dash = (x1*2+y1)
+    k1 = c_dash^c
+
+    thread = threading.Thread(target=receive, args=('get_k',))
+    thread.daemon = True
+    thread.start()
+    send(k1, 1, 'get_k')
+    thread.join()
+    k2 = k2
+    # print('k2', k2)
+
+    R1 = []
+    for i in range(4):
+        R1.append(str(precomps[str((k2+i)%4)]^xs[i]))
+    # print()
+    R1 = ','.join(R1)
+
+    thread = threading.Thread(target=receive, args=('get_r',))
+    thread.daemon = True
+    thread.start()
+    send(R1, 1, 'get_r')
+    thread.join()
+    R2 = R2
+
+    print(R2.split(b','), 'xxxxxx')
+
+    xy = int(R2.split(b',')[c_dash]) ^ bc
+    print("got prod", xy)
+
+if player == '1':
+    with open("1s_pre_sharedbits.json") as f:
+        precomps = json.load(f)
+    
+    c = precomps['c']
+    bc = precomps['bc']
+
+    y = ms[1]%2
+    y1 = randint(0, 1)
+    y2 = (y - y1)%2
+    print('y', y, 'y1', y1, 'y2', y2)
+
+    thread = threading.Thread(target=receive, args=('get_xy_share',))
+    thread.daemon = True
+    thread.start()
+    send(y1, 0, 'get_xy_share')
+    thread.join()
+    x2 = x2
+    # send(x, 1)
+
+    xs = []
+    xs.append(((x2+0)%2)*((y2+0)%2))
+    xs.append(((x2+0)%2)*((y2+1)%2))
+    xs.append(((x2+1)%2)*((y2+0)%2))
+    xs.append(((x2+1)%2)*((y2+1)%2))
+
+    c_dash = (x2*2+y2)
+    k2 = c_dash^c
+
+    thread = threading.Thread(target=receive, args=('get_k',))
+    thread.daemon = True
+    thread.start()
+    send(k2, 0, 'get_k')
+    thread.join()
+    k1 = k1
+
+    R2 = []
+    for i in range(4):
+        R2.append(str(precomps[str((k1+i)%4)]^xs[i]))
+    R2 = ','.join(R2)
+
+    thread = threading.Thread(target=receive, args=('get_r',))
+    thread.daemon = True
+    thread.start()
+    send(R2, 0, 'get_r')
+    thread.join()
+    R1 = R1
+
+    print(R1.split(b','), 'xxxxxx')
+    xy = int(R1.split(b',')[c_dash]) ^ bc
+    print("got prod", xy)
+
