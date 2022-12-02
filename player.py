@@ -180,8 +180,7 @@ mi = smi
 # pk_background_thread.join()
 
 
-print("$"*80)
-
+# print("$"*80)
 
 # ms = [4, 3]
 NUM_BITS = 4
@@ -330,7 +329,14 @@ sleep(10)
 prod0 = 0
 prod2 = 0
 final0 = 0
+final1 = 0
 final2 = 0
+with open('publicClientKey.key') as f:
+    publicClientKey = json.load(f)   
+
+h = publicClientKey['h']
+publicKey = PublicKey(publicClientKey['p'], publicClientKey['g'], h, 256)
+
 # share its values to other players
 if player == '0':
     #shares of the product
@@ -347,6 +353,14 @@ if player == '0':
     finalShare0 = finalShare0
     print(finalShare0 + prod0)
     final0 = finalShare0 + prod0
+    cipher0 = encrypt(publicKey, str(final0))
+    print(cipher0)
+    
+if player == '1':
+    #shares of the product
+    print(final1)
+    cipher1 = encrypt(publicKey, str(final1))
+    print(cipher1)
 
 
 s0 = 0
@@ -366,5 +380,8 @@ if player == '2':
     finalShare2 = finalShare2
     print(finalShare2 + s2)
     final2 = finalShare2 + s2
+    cipher2 = encrypt(publicKey, str(final2))
+    print(cipher2)
+
 
 

@@ -45,6 +45,21 @@ for i in range(3):
         json.dump(db, f)
         
         
+        
+# setting up private client and player key for final encryption for ledger post
+x = generate_keys()
+publicKey = x['publicKey']
+privateKey = x['privateKey']
+
+with open('publicClientKey.key', 'w') as f:
+    db = {'p': publicKey.p, 'g':publicKey.g, 'h':publicKey.h}
+    json.dump(db, f)
+
+with open('privateClientKey.key', 'w') as f:
+    db = {'p': privateKey.p, 'g':privateKey.g, 'x':privateKey.x}
+    json.dump(db, f)
+    
+
 #################################################################################################################################################################################################################################
 
 publicKey = None
