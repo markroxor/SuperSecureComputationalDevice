@@ -41,7 +41,7 @@ cis = [(encrypt(publicKey, mis[0])), (encrypt(publicKey, mis[1])), (encrypt(publ
 
 for i in range(3):
     with open('cipher'+str(i)+'.c', 'w') as f:
-        db = {'c':int(''.join(cis[i].split()))}
+        db = {'c':cis[i]}
         json.dump(db, f)
         
         

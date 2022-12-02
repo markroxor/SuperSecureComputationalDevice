@@ -1,5 +1,6 @@
 import socket            
 import sys, json
+from elgamal import PrivateKey, PublicKey, generate_keys, encrypt, decrypt
 from random import randint
 import threading
 from time import sleep
@@ -14,14 +15,14 @@ player = sys.argv[1]
 HOST = "127.0.0.1"
 PORT = 8080
 
-print("I have access to my share of the secret key in file ", 'privateKey'+str(player)+'.key')
+# print("I have access to my share of the secret key in file ", 'privateKey'+str(player)+'.key')
 # key part
 with open('privateKey'+str(player)+'.key') as f:
     privateKey = json.load(f)
 
 x = privateKey['x']
-
-print('my secret is', x)
+myPrivateKeyShare = privateKey
+# print('my secret is', x)
 
 # using SUM protocol II
 # TODO use gadgets here to do whatever
@@ -30,46 +31,21 @@ x1_ = randint(1, x)%privateKey['p']
 x2_ = (x - x1_ - x0)%privateKey['p']
 xs = [x0, x1_, x2_]
 
-# # message part
-# with open('message'+str(player)+'.m') as f:
-#     message = json.load(f)
-
-# m = message['m']
-
-# print('my message is', m)
-
-# # split into shares
-# m0 = randint(1, int(m))
-# m1 = randint(1, int(m))
-# m2 = int(m) - m1 - m0
-# ms = [m0, m1, m2]
-
-# # print shares for sanity
-# for i in range(3):
-#     print(ms[i])
-
 # cipher part
 with open('cipher'+str(player)+'.c') as f:
     message = json.load(f)
 
 c = message['c']
 
+
 # print('my cipher is', c)
 
-# split into shares
-# c0 = randint(1, c)
-# c1 = randint(1, c)
-# c2 = c - c1 - c0
-# cs = [c0, c1, c2]
 
-# # print shares for sanity
-# for i in range(3):
-#     print(cs[i])
 
 # using SUM protocol II
 # TODO use gadgets here to do whatever
 
-global x1,y2,x2,k1,k2,R1,R2,y1
+global x1,y2,x2,k1,k2,R1,R2,y1,data_r
 
 k1 = None
 k2 = None
@@ -77,7 +53,7 @@ R1 = None
 R2 = None
 
 def receive(method):
-    global x1,y2,x2,k1,k2,R1,R2,y1
+    global x1,y2,x2,k1,k2,R1,R2,y1,data_r
     expecting_players = []
     data_r = [x]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -89,7 +65,6 @@ def receive(method):
         # keep waiting until it gets input of the other two players.
         while not (len(expecting_players) >= 2 and (int(player) + 1)%3 in expecting_players and (int(player) + 2)%3 in expecting_players):
             conn, addr = s.accept()
-            # print("got conn")
             with conn:
                 while True:
                     # sleep(1)
@@ -99,12 +74,13 @@ def receive(method):
                         continue
                     other_player = int(data.split()[0])
                     method = data.split()[1]
-                    # print('got method', method)
-
+                    # print('got method1', method, "OP ", other_player, "EP ", expecting_players)
+                    
                     if method == b'pk' and other_player not in expecting_players:
                         # print(" got -> ", data)
                         data_r.append(data.split()[-1])
                         expecting_players.append(other_player)
+                        break
 
                     if method == b'get_xy_share':
                         if player == '0':
@@ -133,8 +109,9 @@ def receive(method):
                     break
 
 
-            if method != b'pk':
+            if method != b'pk' or len(expecting_players) >= 2:
                 break
+
     
     # print('data received is ', method, data_r)
     # TODO send to smart contract the local computation, here
@@ -168,33 +145,47 @@ def send(msg, other_player, method):
 
         break
 
-# for i in range(2):
-#     i+=1
-#     send(x, (int(player) + i)%3, 'pk')
 
 # wait for background process to finish
+thread = threading.Thread(target=receive, args=('pk',))
+thread.daemon = True
+thread.start()
+for i in range(2):
+    i+=1
+    send(x, (int(player) + i)%3, 'pk')
+    
+thread.join()
+    
+print('sum', sum([ int(k) for k in data_r]))
+print(c)
+mi = decrypt(PrivateKey(myPrivateKeyShare['p'], myPrivateKeyShare['g'], (sum([ int(k) for k in data_r])), 256), c)    
+print(mi)
+mi = int(mi)
 # pk_background_thread.join()
 
 
 print("$"*80)
 
 
-ms = [4, 3]
-NUM_BITS = 3
-s1s = []
-i = 0
-# while ms[i]:
+# ms = [4, 3]
+NUM_BITS = 4
 
-# 5 bit num only
-for _ in range(NUM_BITS):
-    s1s.append(ms[i]%2)
-    ms[i] //= 2
+if player == '0':
+    s1s = []
+    i = 0
+    # while ms[i]:
 
-s2s = []
-i = 1
-for _ in range(NUM_BITS):
-    s2s.append(ms[i]%2)
-    ms[i] //= 2
+    # 5 bit num only
+    for _ in range(NUM_BITS):
+        s1s.append(mi%2)
+        mi //= 2
+
+if player == '1':
+    s2s = []
+    i = 1
+    for _ in range(NUM_BITS):
+        s2s.append(mi%2)
+        mi //= 2
 
 prod = 0
 for i in range(NUM_BITS):
@@ -315,4 +306,8 @@ for i in range(NUM_BITS):
             prod += xy*2**(i+j)
 
 print(prod)
+
+
+
+
 
