@@ -92,7 +92,7 @@ def receive(method):
             # print("got conn")
             with conn:
                 while True:
-                    sleep(1)
+                    # sleep(1)
                     # print('waiting to recieve at', (HOST, PORT+ int(player)), method)
                     data = conn.recv(1024)
                     if not data:
@@ -109,27 +109,27 @@ def receive(method):
                     if method == b'get_xy_share':
                         if player == '0':
                             y1 = int(data.split()[-1])
-                            print('RECV: y1', y1)
+                            # print('RECV: y1', y1)
                         if player == '1':
                             x2 = int(data.split()[-1])
-                            print('RECV: x2', x2)
+                            # print('RECV: x2', x2)
 
                     if method == b'get_k':
                         if player == '0':
                             k2 = int(data.split()[-1])
-                            print('RECV: k2', k2)
+                            # print('RECV: k2', k2)
                         if player == '1':
                             k1 = int(data.split()[-1])
-                            print('RECV: k1', k1)
+                            # print('RECV: k1', k1)
 
                     if method == b'get_r':
                         if player == '0':
                             R2 = data.split()[-1]
-                            print('RECV: R2', R2)
+                            # print('RECV: R2', R2)
                             # print('set R2')
                         if player == '1':
                             R1 = data.split()[-1]
-                            print('RECV: R1', R1)
+                            # print('RECV: R1', R1)
                     break
 
 
@@ -150,7 +150,7 @@ def receive(method):
 def send(msg, other_player, method):
     # other_player = (int(player) + other_player)%3
     while 1:
-        sleep(1)
+        # sleep(1)
         # print('SEND: waiting for ', (HOST, PORT+other_player), method)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -162,7 +162,7 @@ def send(msg, other_player, method):
 
             # print('SEND: sending to ', other_player, ' the msg -> ', msg)
             to_s = str(player)+" "+method+" " + str(msg)
-            print("SEND:", method, msg)
+            # print("SEND:", method, msg)
             s.sendall((to_s).encode('utf-8'))
             # print("SENT:", to_s)
 
@@ -179,116 +179,140 @@ def send(msg, other_player, method):
 print("$"*80)
 
 
-ms = [0, 0]
+ms = [7, 3]
+NUM_BITS = 3
+s1s = []
+i = 0
+# while ms[i]:
 
-# 1-4-OT
-if player == '0':
-    print('here p0')
-    with open("0s_pre_sharedbits.json") as f:
-        precomps = json.load(f)
-    
-    print(precomps)
-    c = precomps['c']
-    bc = precomps['bc']
+# 5 bit num only
+for _ in range(NUM_BITS):
+    s1s.append(ms[i]%2)
+    ms[i] //= 2
 
-    x = ms[0]%2
-    x1 = randint(0, 1)
-    x2 = (x - x1)%2
-    print('x', x,'x1', x1, 'x2', x2)
+s2s = []
+i = 1
+for _ in range(NUM_BITS):
+    s2s.append(ms[i]%2)
+    ms[i] //= 2
 
-    thread = threading.Thread(target=receive, args=('get_xy_share',))
-    thread.daemon = True
-    thread.start()
-    send(x2, 1, 'get_xy_share')
-    thread.join()
-    y1 = y1
-    # print('y1', y1)
-    # send(x, 1)
+prod = 0
+for i in range(NUM_BITS):
+    for j in range(NUM_BITS):
+        if player == '0':
+            # s1s[i] 
+            # print('here p0')
+            with open("0s_pre_sharedbits.json") as f:
+                precomps = json.load(f)
+            
+            # print(precomps)
+            c = precomps['c']
+            bc = precomps['bc']
 
-    xs = []
-    xs.append(((x1+0)%2)*((y1+0)%2))
-    xs.append(((x1+0)%2)*((y1+1)%2))
-    xs.append(((x1+1)%2)*((y1+0)%2))
-    xs.append(((x1+1)%2)*((y1+1)%2))
+            x = s1s[i]
+            x1 = randint(0, 1)
+            x2 = (x - x1)%2
+            # print('x', x,'x1', x1, 'x2', x2)
 
-    c_dash = (x1*2+y1)
-    k1 = c_dash^c
+            thread = threading.Thread(target=receive, args=('get_xy_share',))
+            thread.daemon = True
+            thread.start()
+            send(x2, 1, 'get_xy_share')
+            thread.join()
+            y1 = y1
+            # print('y1', y1)
+            # send(x, 1)
 
-    thread = threading.Thread(target=receive, args=('get_k',))
-    thread.daemon = True
-    thread.start()
-    send(k1, 1, 'get_k')
-    thread.join()
-    k2 = k2
-    # print('k2', k2)
+            xs = []
+            xs.append(((x1+0)%2)*((y1+0)%2))
+            xs.append(((x1+0)%2)*((y1+1)%2))
+            xs.append(((x1+1)%2)*((y1+0)%2))
+            xs.append(((x1+1)%2)*((y1+1)%2))
 
-    R1 = []
-    for i in range(4):
-        R1.append(str(precomps[str((k2+i)%4)]^xs[i]))
-    # print()
-    R1 = ','.join(R1)
+            c_dash = (x1*2+y1)
+            k1 = c_dash^c
 
-    thread = threading.Thread(target=receive, args=('get_r',))
-    thread.daemon = True
-    thread.start()
-    send(R1, 1, 'get_r')
-    thread.join()
-    R2 = R2
+            thread = threading.Thread(target=receive, args=('get_k',))
+            thread.daemon = True
+            thread.start()
+            send(k1, 1, 'get_k')
+            thread.join()
+            k2 = k2
+            # print('k2', k2)
 
-    print(R2.split(b','), 'xxxxxx')
+            R1 = []
+            for i_ in range(4):
+                R1.append(str(precomps[str((k2+i_)%4)]^xs[i_]))
+            # print()
+            R1 = ','.join(R1)
 
-    xy = int(R2.split(b',')[c_dash]) ^ bc
-    print("got prod", xy)
+            thread = threading.Thread(target=receive, args=('get_r',))
+            thread.daemon = True
+            thread.start()
+            send(R1, 1, 'get_r')
+            thread.join()
+            R2 = R2
 
-if player == '1':
-    with open("1s_pre_sharedbits.json") as f:
-        precomps = json.load(f)
-    
-    c = precomps['c']
-    bc = precomps['bc']
+            xy = int(R2.split(b',')[c_dash]) ^ bc
+            # print("got prod", xy)
+            # print('i j prod', i, j, xy,xy*2**(i+j), s1s[i], s2s[j]  )
+            prod += xy*2**(i+j)
 
-    y = ms[1]%2
-    y1 = randint(0, 1)
-    y2 = (y - y1)%2
-    print('y', y, 'y1', y1, 'y2', y2)
 
-    thread = threading.Thread(target=receive, args=('get_xy_share',))
-    thread.daemon = True
-    thread.start()
-    send(y1, 0, 'get_xy_share')
-    thread.join()
-    x2 = x2
-    # send(x, 1)
+        if player == '1':
+            with open("1s_pre_sharedbits.json") as f:
+                precomps = json.load(f)
+            
+            c = precomps['c']
+            bc = precomps['bc']
 
-    xs = []
-    xs.append(((x2+0)%2)*((y2+0)%2))
-    xs.append(((x2+0)%2)*((y2+1)%2))
-    xs.append(((x2+1)%2)*((y2+0)%2))
-    xs.append(((x2+1)%2)*((y2+1)%2))
+            y = s2s[j]
+            y1 = randint(0, 1)
+            y2 = (y - y1)%2
+            # print('y', y, 'y1', y1, 'y2', y2)
 
-    c_dash = (x2*2+y2)
-    k2 = c_dash^c
+            thread = threading.Thread(target=receive, args=('get_xy_share',))
+            thread.daemon = True
+            thread.start()
+            send(y1, 0, 'get_xy_share')
+            thread.join()
+            x2 = x2
+            # send(x, 1)
 
-    thread = threading.Thread(target=receive, args=('get_k',))
-    thread.daemon = True
-    thread.start()
-    send(k2, 0, 'get_k')
-    thread.join()
-    k1 = k1
+            xs = []
+            xs.append(((x2+0)%2)*((y2+0)%2))
+            xs.append(((x2+0)%2)*((y2+1)%2))
+            xs.append(((x2+1)%2)*((y2+0)%2))
+            xs.append(((x2+1)%2)*((y2+1)%2))
 
-    R2 = []
-    for i in range(4):
-        R2.append(str(precomps[str((k1+i)%4)]^xs[i]))
-    R2 = ','.join(R2)
+            c_dash = (x2*2+y2)
+            k2 = c_dash^c
 
-    thread = threading.Thread(target=receive, args=('get_r',))
-    thread.daemon = True
-    thread.start()
-    send(R2, 0, 'get_r')
-    thread.join()
-    R1 = R1
+            thread = threading.Thread(target=receive, args=('get_k',))
+            thread.daemon = True
+            thread.start()
+            send(k2, 0, 'get_k')
+            thread.join()
+            k1 = k1
 
-    print(R1.split(b','), 'xxxxxx')
-    xy = int(R1.split(b',')[c_dash]) ^ bc
-    print("got prod", xy)
+            R2 = []
+            for i_ in range(4):
+                R2.append(str(precomps[str((k1+i_)%4)]^xs[i_]))
+            R2 = ','.join(R2)
+
+            thread = threading.Thread(target=receive, args=('get_r',))
+            thread.daemon = True
+            thread.start()
+            send(R2, 0, 'get_r')
+            thread.join()
+            R1 = R1
+
+            xy = int(R1.split(b',')[c_dash]) ^ bc
+            # print("got prod", xy)
+            # print('i j prod', i, j)
+            # print( xy,xy*2**(i+j), s1s[i], s2s[j]  )
+
+            prod += xy*2**(i+j)
+
+print(prod)
 
