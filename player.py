@@ -175,7 +175,8 @@ thread.join()
     
 # print('sum', sum([ int(k) for k in data_r]))
 # print(c)
-smi = int(decrypt(PrivateKey(myPrivateKeyShare['p'], myPrivateKeyShare['g'], (sum([ int(k) for k in data_r])), 256), c)) 
+print(data_r)
+smi = int(decrypt(PrivateKey(myPrivateKeyShare['p'], myPrivateKeyShare['g'], (sum([ int(k) for k in data_r]))%myPrivateKeyShare['p'], 256), c)) 
 mi = smi
 # pk_background_thread.join()
 
