@@ -41,7 +41,7 @@ cis = [(encrypt(publicKey, mis[0])), (encrypt(publicKey, mis[1])), (encrypt(publ
 
 for i in range(3):
     with open('cipher'+str(i)+'.c', 'w') as f:
-        db = {'c':int(cis[i])}
+        db = {'c':cis[i]}
         json.dump(db, f)
         
         
@@ -63,7 +63,7 @@ for i in range(3):
         privateKey = json.load(f)
         x = (x + privateKey['x'])%privateKey['p']
 
-privateKey = PrivateKey(privateKey['p'], privateKey['g'], x, 256)
+privateKey = PrivateKey(publicKey['p'], publicKey['g'], x, 256)
 
 cipher = encrypt(publicKey, "This is the message I want to encrypt")
 print('this is ciphertext -> ', cipher)
