@@ -3,6 +3,7 @@ import sys, json
 from elgamal import PrivateKey, PublicKey, generate_keys, encrypt, decrypt
 from random import randint
 import threading
+import subprocess
 from time import sleep
 
 # if the player crashes, everything will timeout in 100 secs and no communication will take place
@@ -356,12 +357,21 @@ if player == '0':
     final0 = finalShare0 + prod0
     cipher0 = encrypt(publicKey, str(final0))
     print(cipher0)
+    x = subprocess.check_output('source config.sh ; \
+                            /Users/mark/Library/CloudStorage/OneDrive-purdue.edu/Courses/55500/project/sandbox/sandbox\
+                            goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
+                            "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
+
     
 if player == '1':
     #shares of the product
     print(final1)
     cipher1 = encrypt(publicKey, str(final1))
     print(cipher1)
+    x = subprocess.check_output('source config.sh ; \
+                                /Users/mark/Library/CloudStorage/OneDrive-purdue.edu/Courses/55500/project/sandbox/sandbox\
+                                goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
+                                "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
 
 
 s0 = 0
@@ -383,6 +393,8 @@ if player == '2':
     final2 = finalShare2 + s2
     cipher2 = encrypt(publicKey, str(final2))
     print(cipher2)
-
-
-
+    x = subprocess.check_output('source config.sh ; \
+                                $SANDBOX \
+                                goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT3" --app-arg \
+                                "str:accept_player_input" --app-arg "str:p2" --app-arg \'str:' + cipher2 + '\' --fee "$FEES"', shell=1)
+    print(x)

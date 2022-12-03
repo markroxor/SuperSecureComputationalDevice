@@ -3,7 +3,7 @@ import pickle
 import json
 from random import randint
 
-x = generate_keys()
+x = generate_keys(128)
 
 publicKey = x['publicKey']
 privateKey = x['privateKey']
@@ -47,7 +47,7 @@ for i in range(3):
         
         
 # setting up private client and player key for final encryption for ledger post
-x = generate_keys()
+x = generate_keys(128)
 publicKey = x['publicKey']
 privateKey = x['privateKey']
 
@@ -69,7 +69,7 @@ xis = None
 with open('publicKey.key') as f:
     publicKey = json.load(f)
 
-publicKey = PublicKey(publicKey['p'], publicKey['g'], publicKey['h'], 256)
+publicKey = PublicKey(publicKey['p'], publicKey['g'], publicKey['h'], 128)
 
 x = 0
 
@@ -78,9 +78,9 @@ for i in range(3):
         privateKey = json.load(f)
         x = (x + privateKey['x'])%privateKey['p']
 
-privateKey = PrivateKey(privateKey['p'], privateKey['g'], x, 256)
+privateKey = PrivateKey(privateKey['p'], privateKey['g'], x, 128)
 
-cipher = encrypt(publicKey, "This is the message I want to encrypt")
+cipher = encrypt(publicKey, "This")
 # cipher = int(''.join(cipher.split()))
 
 print('this is ciphertext -> ', cipher)
