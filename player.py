@@ -46,7 +46,7 @@ c = message['c']
 # using SUM protocol II
 # TODO use gadgets here to do whatever
 
-global x1,y2,x2,k1,k2,R1,R2,y1,data_r,finalShare0,finalShare2
+global x1,y2,x2,k1,k2,R1,R2,y1,data_r,finalShare0,finalShare1,finalShare2
 
 k1 = None
 k2 = None
@@ -54,7 +54,7 @@ R1 = None
 R2 = None
 
 def receive(method):
-    global x1,y2,x2,k1,k2,R1,R2,y1,data_r,finalShare0,finalShare2
+    global x1,y2,x2,k1,k2,R1,R2,y1,data_r,finalShare0,finalShare1,finalShare2
     expecting_players = []
     data_r = [x]
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -103,6 +103,14 @@ def receive(method):
                             # print(finalShare0)
                             # print("in 2")
                             # print('RECV: x2', x2) 
+                        break
+                    
+                    if method == b'finalR':
+                        if player == '1':
+                            finalShare1 = int(data.split()[-1])
+                            # print("in 0")
+                            # print(finalShare0)
+                            # print('RECV: y1', y1) 
                         break
 
                     if method == b'get_k':
@@ -353,25 +361,38 @@ if player == '0':
     send(prod2, 2, 'final')
     thread.join()
     finalShare0 = finalShare0
-    print(finalShare0 + prod0)
     final0 = finalShare0 + prod0
+    final00 = final0 - randint(0, final0)
+    final0 = final0 - final00
+    print(final0)
+    send(final00, 1, 'finalR')
     cipher0 = encrypt(publicKey, str(final0))
     print(cipher0)
-    x = subprocess.check_output('source config.sh ; \
-                            $SANDBOX \
-                            goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
-                            "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
+    # x = subprocess.check_output('source config.sh ; \
+    #                         $SANDBOX \
+    #                         goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
+    #                         "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
 
     
 if player == '1':
     #shares of the product
+    thread = threading.Thread(target=receive, args=('finalR',))
+    thread.daemon = True
+    thread.start()
+    # for i in range(2):
+    #     i+=1
+    #     send(x, (int(player) + i)%3, 'pk')
+    # send(prod2, 2, 'final')
+    thread.join()
+    finalShare1 = finalShare1
+    final1 = finalShare1
     print(final1)
     cipher1 = encrypt(publicKey, str(final1))
     print(cipher1)
-    x = subprocess.check_output('source config.sh ; \
-                                $SANDBOX \
-                                goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
-                                "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
+    # x = subprocess.check_output('source config.sh ; \
+    #                             $SANDBOX \
+    #                             goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
+    #                             "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
 
 
 s0 = 0
@@ -392,9 +413,11 @@ if player == '2':
     print(finalShare2 + s2)
     final2 = finalShare2 + s2
     cipher2 = encrypt(publicKey, str(final2))
+    print(final2)
     print(cipher2)
-    x = subprocess.check_output('source config.sh ; \
-                                $SANDBOX \
-                                goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT3" --app-arg \
-                                "str:accept_player_input" --app-arg "str:p2" --app-arg \'str:' + cipher2 + '\' --fee "$FEES"', shell=1)
+
+    # x = subprocess.check_output('source config.sh ; \
+    #                             $SANDBOX \
+    #                             goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT3" --app-arg \
+    #                             "str:accept_player_input" --app-arg "str:p2" --app-arg \'str:' + cipher2 + '\' --fee "$FEES"', shell=1)
     print(x)
