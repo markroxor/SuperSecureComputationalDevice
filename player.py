@@ -368,10 +368,10 @@ if player == '0':
     send(final00, 1, 'finalR')
     cipher0 = encrypt(publicKey, str(final0))
     print(cipher0)
-    # x = subprocess.check_output('source config.sh ; \
-    #                         $SANDBOX \
-    #                         goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
-    #                         "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
+    x = subprocess.check_output('source config.sh ; \
+                            $SANDBOX \
+                            goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
+                            "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
 
     
 if player == '1':
@@ -389,10 +389,10 @@ if player == '1':
     print(final1)
     cipher1 = encrypt(publicKey, str(final1))
     print(cipher1)
-    # x = subprocess.check_output('source config.sh ; \
-    #                             $SANDBOX \
-    #                             goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
-    #                             "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
+    x = subprocess.check_output('source config.sh ; \
+                                $SANDBOX \
+                                goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
+                                "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
 
 
 s0 = 0
@@ -416,8 +416,8 @@ if player == '2':
     print(final2)
     print(cipher2)
 
-    # x = subprocess.check_output('source config.sh ; \
-    #                             $SANDBOX \
-    #                             goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT3" --app-arg \
-    #                             "str:accept_player_input" --app-arg "str:p2" --app-arg \'str:' + cipher2 + '\' --fee "$FEES"', shell=1)
+    x = subprocess.check_output('source config.sh ; \
+                                $SANDBOX \
+                                goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT3" --app-arg \
+                                "str:accept_player_input" --app-arg "str:p2" --app-arg \'str:' + cipher2 + '\' --fee "$FEES"', shell=1)
     print(x)
