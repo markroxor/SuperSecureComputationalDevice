@@ -87,6 +87,7 @@ goal app read --app-id $APP_ID --global --guess-format
 
 
 # run this in the repo directory
+python gen_keys.py
 source config.sh ; python player.py 0 || $SANDBOX  goal app call --app-id "$APP_ID" -f "$ONE" --app-arg "str:return_money" --app-account "$ONE" --fee "$FEES"
 source config.sh ; python player.py 1 || $SANDBOX  goal app call --app-id "$APP_ID" -f "$ONE" --app-arg "str:return_money" --app-account "$ONE" --fee "$FEES"
 source config.sh ; python player.py 2 || $SANDBOX  goal app call --app-id "$APP_ID" -f "$ONE" --app-arg "str:return_money" --app-account "$ONE" --fee "$FEES"
