@@ -129,7 +129,7 @@ def approval():
                 {
                     TxnField.type_enum: TxnType.Payment,
                     TxnField.receiver: Txn.accounts[1],
-                    TxnField.amount: Int(3333000000),
+                    TxnField.amount: Int(3334000000),
                     TxnField.fee: Int(0),  # use fee pooling
                 }
             ),

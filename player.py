@@ -392,7 +392,7 @@ if player == '0':
     cipher0 = encrypt(publicKey, str(final0))
     print(cipher0)
     x = subprocess.check_output('source config.sh ; \
-                            /Users/mark/Library/CloudStorage/OneDrive-purdue.edu/Courses/55500/project/sandbox/sandbox\
+                            $SANDBOX \
                             goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
                             "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
 
@@ -413,7 +413,7 @@ if player == '1':
     cipher1 = encrypt(publicKey, str(final1))
     print(cipher1)
     x = subprocess.check_output('source config.sh ; \
-                                /Users/mark/Library/CloudStorage/OneDrive-purdue.edu/Courses/55500/project/sandbox/sandbox\
+                                $SANDBOX \
                                 goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
                                 "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
 
