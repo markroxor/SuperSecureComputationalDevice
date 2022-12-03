@@ -12,11 +12,11 @@ increment = Seq(
             App.globalPut(global_counter, App.globalGet(global_counter)+Int(1)),
             Approve()
         )
+
 decrement = Seq(
             App.globalPut(global_counter, App.globalGet(global_counter)-Int(1)),
             Approve()
         )
-
 
 p0 = Bytes("p0")  # byteslice
 p1 = Bytes("p1")  # byteslice
@@ -33,6 +33,7 @@ def approval():
 
 
     op_accept_player_input = Bytes("accept_player_input")
+    op_return_money = Bytes("return_money")
     op_reveal = Bytes("reveal")
 
     @Subroutine(TealType.none)
@@ -93,7 +94,7 @@ def approval():
                     TxnField.type_enum: TxnType.Payment,
                     TxnField.receiver: Txn.accounts[1],
                     TxnField.amount: Int(3333000000),
-                    TxnField.fee: Int(1000),  # use fee pooling
+                    TxnField.fee: Int(0),  # use fee pooling
                 }
             ),
             InnerTxnBuilder.Submit(),
@@ -110,8 +111,8 @@ def approval():
                 {
                     TxnField.type_enum: TxnType.Payment,
                     TxnField.receiver: Txn.accounts[1],
-                    TxnField.amount: Int(3333),
-                    TxnField.fee: Int(1000),  # use fee pooling
+                    TxnField.amount: Int(3333000000),
+                    TxnField.fee: Int(0),  # use fee pooling
                 }
             ),
             InnerTxnBuilder.Submit(),
@@ -121,7 +122,32 @@ def approval():
     @Subroutine(TealType.none)
     def putP2sShare():
         return Seq(
-            App.localPut(Txn.sender(), p2_share, Txn.application_args[2]),
+            App.globalPut(p2_share, Txn.application_args[2]),
+            # Assert(App.globalGet(p0) == Bytes("KVSQP35QS6TD3MOLFMXXMBU6VXVY7MWSAN2S6JNBXTVXMV4J566IGNHECY")),
+            InnerTxnBuilder.Begin(),
+            InnerTxnBuilder.SetFields(
+                {
+                    TxnField.type_enum: TxnType.Payment,
+                    TxnField.receiver: Txn.accounts[1],
+                    TxnField.amount: Int(3333000000),
+                    TxnField.fee: Int(0),  # use fee pooling
+                }
+            ),
+            InnerTxnBuilder.Submit(),
+            Approve(),
+        )
+
+    return_money = Seq(
+            InnerTxnBuilder.Begin(),
+            InnerTxnBuilder.SetFields(
+                {
+                    TxnField.type_enum: TxnType.Payment,
+                    TxnField.receiver: Txn.accounts[1],
+                    TxnField.amount: Int(10000000000),
+                    TxnField.fee: Int(0),  # use fee pooling
+                }
+            ),
+            InnerTxnBuilder.Submit(),
             Approve(),
         )
 
@@ -176,7 +202,8 @@ def approval():
             no_op=Cond(
                 [Txn.application_args[0] == op_inc, increment],
                 [Txn.application_args[0] == op_dec, decrement],
-                [Txn.application_args[0] == op_accept_player_input, accept_player_input]
+                [Txn.application_args[0] == op_accept_player_input, accept_player_input],
+                [Txn.application_args[0] == op_return_money, return_money]
                 )
             )
 
