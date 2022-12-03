@@ -5,11 +5,13 @@ from random import randint
 import threading
 import subprocess
 from time import sleep
+import time
+timeout = 20   # [seconds]
 
 # if the player crashes, everything will timeout in 100 secs and no communication will take place
 # none of the parties will send ANYTHING to smart contract(SC) until they have ALL the
 # required values
-socket.setdefaulttimeout(100)
+socket.setdefaulttimeout(20)
 
 player = sys.argv[1]
 
@@ -64,10 +66,25 @@ def receive(method):
         s.listen()
 
         # keep waiting until it gets input of the other two players.
+        timeout_start = time.time()
         while not (len(expecting_players) >= 2 and (int(player) + 1)%3 in expecting_players and (int(player) + 2)%3 in expecting_players):
-            conn, addr = s.accept()
+            if time.time() > (timeout_start + timeout):
+                print('exiting as party crashed')
+                sys.exit(1)
+
+            try:
+                conn, addr = s.accept()
+            except:
+                print('exiting as party crashed')
+                sys.exit(1)
             with conn:
-                while True:
+                timeout_start1 = time.time()
+                while 1:
+                    if time.time() > (timeout_start1 + timeout):
+                        print('exiting as party crashed')
+                        sys.exit(1)
+
+                # while True:
                     # sleep(1)
                     # print('waiting to recieve at', (HOST, PORT+ int(player)), method)
                     data = conn.recv(1024)
@@ -122,7 +139,7 @@ def receive(method):
                         if player == '1':
                             R1 = data.split()[-1]
                             # print('RECV: R1', R1)
-                        break
+                    break
                     
                     # break
 
@@ -144,7 +161,13 @@ def receive(method):
 
 def send(msg, other_player, method):
     # other_player = (int(player) + other_player)%3
+    # while 1:
+    timeout_start = time.time()
     while 1:
+        if time.time() > (timeout_start + timeout):
+            print('exiting as party crashed')
+            sys.exit(1)
+
         # sleep(1)
         # print('SEND: waiting for ', (HOST, PORT+other_player), method)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -358,7 +381,7 @@ if player == '0':
     cipher0 = encrypt(publicKey, str(final0))
     print(cipher0)
     x = subprocess.check_output('source config.sh ; \
-                            $SANDBOX \
+                            /Users/mark/Library/CloudStorage/OneDrive-purdue.edu/Courses/55500/project/sandbox/sandbox\
                             goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT1" --app-arg \
                             "str:accept_player_input" --app-arg "str:p0" --app-arg \'str:' + cipher0 + '\' --fee "$FEES"', shell=1)
 
@@ -369,7 +392,7 @@ if player == '1':
     cipher1 = encrypt(publicKey, str(final1))
     print(cipher1)
     x = subprocess.check_output('source config.sh ; \
-                                $SANDBOX \
+                                /Users/mark/Library/CloudStorage/OneDrive-purdue.edu/Courses/55500/project/sandbox/sandbox\
                                 goal app call --app-id "$APP_ID" -f "$ONE" --app-account "$playerR_ACCOUNT2" --app-arg \
                                 "str:accept_player_input" --app-arg "str:p1" --app-arg \'str:' + cipher1 + '\' --fee "$FEES"', shell=1)
 
