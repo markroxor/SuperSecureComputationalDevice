@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# change the name of the counter folder to crpto
+# copy the counter.py from the repo directory to the crypto folder in the pyteal course 
+# copy couter.py to 
 # build the code you have written, inside the pyteal-course directory run
 ./build.sh contracts.crypto.counter
 
