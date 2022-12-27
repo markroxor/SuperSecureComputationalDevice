@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # change the name of the counter folder to crpto
 # copy the counter.py from the repo directory to the crypto folder in the pyteal course 
 # copy counter.py to the newly named folder 
