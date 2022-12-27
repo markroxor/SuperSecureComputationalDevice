@@ -1,4 +1,5 @@
 # SuperSecureComputationalDevice
+![problem statemnet](https://user-images.githubusercontent.com/11366315/209598415-0e6039b3-99fb-404f-9d00-6d3c5ccc854b.png)
 
 `gen_keys.py` will generate elgamal keys, store the FULL keys in privateKey.key has params (p,g,h) and privateKey.key with params (p,g,x)
 It also splits the the key for each player in privateKey{i}.py using sum protocol II. So that individually none of the parties have any information about
